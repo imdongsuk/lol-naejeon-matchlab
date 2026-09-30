@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>롤내전 매치랩 — 실전적 연동</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Cinzel:wght@600;900&display=swap">
+<style>
+:root{
+  --accent:#8b5cf6; --accent-strong:#7c3aed; --pink:#d6409f; --pink-strong:#c2338a;
+  --gold:#c9a227; --bg1:#f7f0ff; --surface:rgba(255,255,255,.72);
+  --ink:#241832; --muted:#7a6a8c; --radius:20px;
+  --shadow:0 18px 40px -16px rgba(124,58,237,.35);
+  --shadow-soft:0 8px 20px -10px rgba(124,58,237,.25);
+  --danger:#c0392b;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:"Noto Sans KR",sans-serif; color:var(--ink);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(214,64,159,.18), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(139,92,246,.22), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(201,162,39,.12), transparent 50%),
+    var(--bg1);
+  min-height:100vh; padding:0 0 60px;
+}
+.wrap{max-width:560px;margin:0 auto;padding:0 18px;}
+.crest{width:56px;height:56px;border-radius:50%;margin:32px auto 10px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;font-size:22px;box-shadow:var(--shadow);}
+.eyebrow{display:block;text-align:center;letter-spacing:.2em;font-size:12px;color:var(--pink-strong);font-weight:700;}
+.eyebrow::before,.eyebrow::after{content:"✦";margin:0 8px;color:var(--gold);}
+h1{text-align:center;font-family:"Cinzel",serif;font-weight:900;font-size:30px;margin:6px 0 4px;
+  background:linear-gradient(135deg,var(--accent-strong),var(--pink-strong));-webkit-background-clip:text;background-clip:text;color:transparent;}
+p.lead{text-align:center;color:var(--muted);margin:0 0 22px;font-size:14px;line-height:1.5;}
+.card{background:var(--surface);backdrop-filter:blur(14px) saturate(160%);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;box-shadow:var(--shadow-soft);border:1px solid rgba(255,255,255,.6);}
+.section-title{font-weight:800;margin-bottom:10px;font-size:15px;}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(124,58,237,.25);
+  background:rgba(255,255,255,.9);font-size:14px;font-family:inherit;}
+input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.row{display:flex;gap:8px;}
+.row > input{flex:1;}
+.btn{border:none;border-radius:999px;padding:11px 18px;font-weight:700;font-size:14px;cursor:pointer;
+  font-family:inherit;transition:transform .08s ease;}
+.btn:active{transform:scale(.96);}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;box-shadow:var(--shadow-soft);}
+.btn.primary:disabled{opacity:.5;cursor:default;}
+.btn.block{width:100%;margin-top:14px;}
+.msg{font-size:13px;margin-top:10px;white-space:pre-line;}
+.msg.error{color:var(--danger);}
+.msg.ok{color:#1f8a52;}
+.member{padding:12px 0;border-bottom:1px solid rgba(124,58,237,.12);}
+.member:last-child{border-bottom:none;}
+.member-name{font-weight:800;font-size:15px;}
+.member-riotid{color:var(--muted);font-size:12px;margin-left:6px;}
+.poschips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.poschip{background:rgba(139,92,246,.12);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent-strong);}
+.poschip .wr{color:var(--pink-strong);margin-left:4px;}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(124,58,237,.3);border-top-color:var(--accent);
+  border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crest">◆</div>
+  <span class="eyebrow">LOL NAEJEON LAB</span>
+  <h1>실전적 연동 테스트</h1>
+  <p class="lead">라이엇 ID(게임이름#태그)를 입력하면 실제 최근 경기를 분석해서<br>포지션별 판수·승률을 서버에 저장해요. 누가 열어도 같은 데이터를 봐요.</p>
+
+  <div class="card">
+    <div class="section-title">✦ 멤버 연동하기</div>
+    <label>내전에서 쓸 이름</label>
+    <input id="f-name" placeholder="예: 동석">
+    <label>라이엇 ID</label>
+    <div class="row">
+      <input id="f-gamename" placeholder="게임이름 (예: Hide on bush)">
+      <input id="f-tagline" placeholder="태그 (예: KR1)">
+    </div>
+    <button class="btn primary block" id="btn-link">라이엇 전적 불러오기 →</button>
+    <div id="link-msg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">✦ 연동된 멤버 (<span id="member-count">0</span>명)</div>
+    <div id="member-list"><div class="empty">아직 연동된 멤버가 없어요.</div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var API = "/api/members";
+  var $name = document.getElementById("f-name");
+  var $gn = document.getElementById("f-gamename");
+  var $tl = document.getElementById("f-tagline");
+  var $btn = document.getElementById("btn-link");
+  var $msg = document.getElementById("link-msg");
+  var $list = document.getElementById("member-list");
+  var $count = document.getElementById("member-count");
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function renderMembers(members){
+    $count.textContent = members.length;
+    if(!members.length){
+      $list.innerHTML = '<div class="empty">아직 연동된 멤버가 없어요.</div>';
+      return;
+    }
+    var html = "";
+    members.forEach(function(m){
+      html += '<div class="member">';
+      html += '<span class="member-name">' + escapeHtml(m.name) + '</span>';
+      html += '<span class="member-riotid">' + escapeHtml(m.riotGameName) + '#' + escapeHtml(m.riotTagLine) + '</span>';
+      if(m.positions && m.positions.length){
+        html += '<div class="poschips">';
+        m.positions.forEach(function(p){
+          html += '<span class="poschip">' + p.label + ' ' + p.games + '판 <span class="wr">' + p.winRate + '%</span></span>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div class="poschips"><span class="poschip">분석된 최근 경기가 없어요</span></div>';
+      }
+      html += '</div>';
+    });
+    $list.innerHTML = html;
+  }
+
+  function loadMembers(){
+    fetch(API).then(function(r){ return r.json(); }).then(function(data){
+      renderMembers(data.members || []);
+    }).catch(function(){
+      $list.innerHTML = '<div class="empty">멤버 목록을 불러오지 못했어요.</div>';
+    });
+  }
+
+  $btn.addEventListener("click", function(){
+    var name = $name.value.trim();
+    var gameName = $gn.value.trim();
+    var tagLine = $tl.value.trim();
+    if(!name || !gameName || !tagLine){
+      $msg.className = "msg error";
+      $msg.textContent = "이름과 라이엇 ID를 모두 입력해주세요.";
+      return;
+    }
+    $btn.disabled = true;
+    $msg.className = "msg";
+    $msg.innerHTML = '<span class="spin"></span>실제 전적 불러오는 중... (몇 초 걸릴 수 있어요)';
+    fetch(API, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({name:name, gameName:gameName, tagLine:tagLine})
+    }).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+      .then(function(res){
+        $btn.disabled = false;
+        if(!res.ok){
+          $msg.className = "msg error";
+          $msg.textContent = res.data.error || "연동에 실패했어요.";
+          return;
+        }
+        $msg.className = "msg ok";
+        $msg.textContent = "✓ " + res.data.member.name + " 연동 완료! (최근 " + res.data.member.analyzedMatches + "경기 분석)";
+        $name.value = ""; $gn.value = ""; $tl.value = "";
+        loadMembers();
+      }).catch(function(){
+        $btn.disabled = false;
+        $msg.className = "msg error";
+        $msg.textContent = "서버와 통신하지 못했어요. 잠시 후 다시 시도해주세요.";
+      });
+  });
+
+  loadMembers();
+})();
+</script>
+</body>
+</html>

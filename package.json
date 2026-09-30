@@ -1,0 +1,9 @@
+{
+  "name": "lol-naejeon-matchlab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "롤내전 실제 라이엇 전적 연동 매치랩 백엔드",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
