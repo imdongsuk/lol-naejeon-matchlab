@@ -15,8 +15,18 @@ function json(body, statusCode = 200) {
   };
 }
 
+function membersStore() {
+  // Netlify의 zero-config 자동 주입이 이 배포 환경에서는 동작하지 않아서
+  // SITE_ID / NETLIFY_FUNCTIONS_TOKEN을 직접 넘겨준다 (둘 다 Netlify Functions에 기본 제공됨).
+  return getStore({
+    name: "members",
+    siteID: process.env.SITE_ID,
+    token: process.env.NETLIFY_FUNCTIONS_TOKEN,
+  });
+}
+
 exports.handler = async (event) => {
-  const store = getStore("members");
+  const store = membersStore();
 
   try {
     if (event.httpMethod === "GET") {
@@ -60,7 +70,7 @@ exports.handler = async (event) => {
 
       let statsResult;
       try {
-        statsResult = await buildPositionStats(account.puuid, 15);
+        statsResult = await buildPositionStats(account.puuid, 10);
       } catch (e) {
         return json({ error: `전적 조회 중 문제가 발생했어요: ${e.message}` }, 502);
       }

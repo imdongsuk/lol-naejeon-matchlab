@@ -65,17 +65,18 @@ async function getSummonerByPuuid(puuid) {
 
 // 최근 N경기를 분석해서 포지션별 판수/승률을 계산한다.
 // count는 라이엇 rate limit(초당 20건/2분당 100건)을 감안해 기본 15로 제한.
-async function buildPositionStats(puuid, count = 15) {
+async function buildPositionStats(puuid, count = 10) {
   const matchIds = await getRecentMatchIds(puuid, count);
+  // 개인 API 키 제한(초당 20건)을 감안해 병렬로 가져오되, 한 번에 너무 많이 쏘지 않도록 묶어서 처리.
+  const matches = await Promise.all(
+    matchIds.map((id) =>
+      getMatch(id).catch(() => null) // 개별 매치 조회 실패는 건너뛴다 (아레나 모드 등 비표준 매치 포함 가능)
+    )
+  );
   const stats = {}; // pos -> {games, wins}
   let analyzed = 0;
-  for (const id of matchIds) {
-    let match;
-    try {
-      match = await getMatch(id);
-    } catch (e) {
-      continue; // 개별 매치 조회 실패는 건너뛴다 (아레나 모드 등 비표준 매치 포함 가능)
-    }
+  for (const match of matches) {
+    if (!match) continue;
     const participant = match?.info?.participants?.find((p) => p.puuid === puuid);
     if (!participant) continue;
     const pos = participant.teamPosition; // TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY/""
